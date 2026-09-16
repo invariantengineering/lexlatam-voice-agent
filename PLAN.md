@@ -1,8 +1,8 @@
 # Realtime voice demo plan
 
-Deliver a two-minute Spanish conversation that retrieves real LexLatam evidence,
-speaks a grounded answer, accepts an interruption, and answers a narrower question
-without stale speech or tool results resurfacing. Budget: a 1–2 day spike.
+Deliver a two-minute Spanish conversation that retrieves real LexLatam evidence
+and speaks a grounded answer. The first milestone is a working end-to-end demo,
+with minimal visible state and MCP tool name, status and latency.
 
 ## Selected stack
 
@@ -35,39 +35,32 @@ deduplicate tool-call IDs, bound and validate results, and reject stale results
 before supplying evidence to the model. No LexLatam code or internal data enters
 this repository. Adapt authentication only to its published contract.
 
-## Vertical slices and gates
+## Three milestones
 
-1. **Plan:** inspect the existing repository and current official contracts;
-   save this plan on a clean feature branch.
-2. **Voice only:** connect/disconnect, microphone, Spanish speech, basic state
-   and recoverable errors. **Gate: a manually verified spoken Spanish round trip.**
-3. **Real MCP:** inspect `tools/list`, verify SDK compatibility, implement the
-   one-tool boundary and evidence return. **Gate: a recorded live MCP request
-   followed by grounded speech.** Preserve guest quota while authentication is
-   being developed; any test fixture must be visibly identified.
-4. **Barge-in:** native audio interruption plus session/turn/response/call IDs,
-   cancellation and stale-event rejection. **Gate: interrupt during speech and
-   pending tool work; the new turn succeeds and old output never resumes.**
-5. **Observability:** one screen with conversation, source cards, bounded tool
-   arguments, status/duration, turn IDs, and interruption events. Use monotonic
-   clocks within each process; distinguish playback proxies from audible timing.
-6. **Tests:** allowlisting, validation, parsing, duplicate calls, stale results,
-   cancellation, timeout and disconnect recovery. No model-wording assertions.
-7. **Demo polish:** README, setup, architecture, actual measurements, screenshot,
-   recording, two-minute script and engineering tradeoffs after the demo works.
+1. **Working demo (2–4 active hours):** confirm access and contracts (15–30 min),
+   complete the Spanish voice loop (30–60 min), connect real legal research
+   (45–90 min), then show minimal state/tool timing and verify the complete flow
+   (30–60 min). Use one implementer and report a runnable checkpoint or a specific
+   blocker after each step. Stop for the presenter's test before further work.
+2. **Optional barge-in:** assess native WebRTC/VAD interruption first. Add only
+   essential stale-turn protection if straightforward. Limit custom work to
+   45 minutes; otherwise defer it and document the limitation.
+3. **Portfolio polish:** concise README, architecture Mermaid, one screenshot,
+   one real latency sample and a two-minute demo script. Stop.
 
-Run typecheck, relevant tests and build for each code slice. Record which gates
-were actually verified. Make logical local commits; do not push without explicit
-authorization. Keep incomplete verification visible.
+Run typecheck and build, plus trivial tests protecting important deterministic
+boundaries. Record live verification separately from fixtures or static checks.
+No separate observability, state-machine, concurrency or test-suite projects.
 
 ## Definition of done
 
-A real authenticated MCP search supports a spoken Spanish answer; interruption
-stops old speech and invalidates pending work; a follow-up triggers fresh evidence
-and a useful answer. The UI shows the actual requests and measured behavior.
+A real authenticated MCP search supports a spoken Spanish answer. The UI shows
+the tool name, success/failure and real measured tool duration. Native interruption
+is evaluated separately and is not a prerequisite for the first demo milestone.
 Retrieved citation cards use only validated MCP fields. Unsupported answers admit
 that available evidence is insufficient; retrieval does not establish legal
-validity or applicability. Focused checks pass and the two-minute demo is recorded.
+validity or applicability. Local checks pass and the presenter can reproduce the
+two-minute demo. Optional work must not delay this result.
 
 ## Non-goals
 
