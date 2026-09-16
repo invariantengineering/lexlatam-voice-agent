@@ -1,9 +1,11 @@
 import type { RealtimeServerEvent } from 'openai/resources/realtime/realtime';
+import type { ToolStatus } from '../server/mcp';
 
 type VoiceCallbacks = {
   onConnected: () => void;
   onEvent: (event: RealtimeServerEvent) => void;
   onError: (message: string) => void;
+  onTool: (tool: ToolStatus | null) => void;
 };
 
 export class VoiceSession {
@@ -13,8 +15,13 @@ export class VoiceSession {
   private channel?: RTCDataChannel;
   private timer?: ReturnType<typeof setTimeout>;
   private closed = false;
+  private sessionId?: string;
+  private pollTimer?: ReturnType<typeof setTimeout>;
 
-  constructor(private audio: HTMLAudioElement, private callbacks: VoiceCallbacks) {}
+  constructor(private audio: HTMLAudioElement, private callbacks: VoiceCallbacks) {
+    window.addEventListener('pagehide', this.handlePageHide);
+  }
+  private handlePageHide = () => this.close();
 
   async connect() {
     this.timer = setTimeout(() => this.fail('La conexión tardó demasiado. Vuelve a intentarlo.'), 30_000);
@@ -23,7 +30,7 @@ export class VoiceSession {
       const configuration = await status.json();
       if (this.closed) return;
       if (!status.ok || !configuration.ready) {
-        throw new Error('Configura OPENAI_API_KEY en .env y reinicia el servidor.');
+        throw new Error('Configura OPENAI_API_KEY y LEXLATAM_MCP_TOKEN en .env y reinicia el servidor.');
       }
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error('El micrófono requiere un navegador compatible en localhost o HTTPS.');
@@ -90,9 +97,11 @@ export class VoiceSession {
         const failure = await response.json().catch(() => null);
         throw new Error(typeof failure?.error === 'string' ? failure.error : 'No se pudo iniciar la sesión.');
       }
-      const sdp = await response.text();
-      if (this.closed) return;
+      const { id, sdp } = await response.json();
+      this.sessionId = id;
+      if (this.closed) { this.releaseServer(); return; }
       await peer.setRemoteDescription({ type: 'answer', sdp });
+      void this.poll();
     } catch (error) {
       if (this.closed) return;
       const denied = error instanceof DOMException && error.name === 'NotAllowedError';
@@ -100,6 +109,25 @@ export class VoiceSession {
         ? 'Permite el acceso al micrófono en el navegador y vuelve a intentarlo.'
         : error instanceof Error ? error.message : 'No se pudo conectar la voz.');
     }
+  }
+
+  private async poll() {
+    if (this.closed || !this.sessionId) return;
+    try {
+      const response = await fetch(`/api/session/${this.sessionId}`, { signal: this.controller.signal });
+      const status = await response.json();
+      if (this.closed) return;
+      if (!response.ok || status.closed) { this.fail('La conexión de búsqueda terminó. Vuelve a conectar.'); return; }
+      this.callbacks.onTool(status.tool);
+      this.pollTimer = setTimeout(() => void this.poll(), 1000);
+    } catch {
+      if (!this.closed) this.fail('No se pudo mantener la conexión de búsqueda.');
+    }
+  }
+
+  private releaseServer() {
+    if (this.sessionId) void fetch(`/api/session/${this.sessionId}`, { method: 'DELETE', keepalive: true }).catch(() => {});
+    this.sessionId = undefined;
   }
 
   private fail(message: string) {
@@ -111,7 +139,10 @@ export class VoiceSession {
   close() {
     if (this.closed) return;
     this.closed = true;
+    window.removeEventListener('pagehide', this.handlePageHide);
     clearTimeout(this.timer);
+    clearTimeout(this.pollTimer);
+    this.releaseServer();
     this.controller.abort();
     this.channel?.close();
     this.peer?.close();

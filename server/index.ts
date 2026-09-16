@@ -25,5 +25,5 @@ if (process.argv.includes('--production')) {
 
 server.listen(port, '127.0.0.1', () => {
   console.log(`Voice demo: http://localhost:${port}`);
-  if (!process.env.OPENAI_API_KEY) console.log('Set OPENAI_API_KEY in .env and restart to enable voice.');
+  if (!process.env.OPENAI_API_KEY || !process.env.LEXLATAM_MCP_TOKEN) console.log('Set OPENAI_API_KEY and LEXLATAM_MCP_TOKEN in .env and restart to enable voice and research.');
 });

@@ -12,8 +12,10 @@ with minimal visible state and MCP tool name, status and latency.
   Browser WebRTC; server-mediated `/v1/realtime/calls` session creation;
   native server VAD. Use Realtime event types consistently.
 - Server sideband WebSocket for tool execution and session control in slice 2.
-- Official MCP TypeScript SDK: candidate `@modelcontextprotocol/sdk@1.30.0`.
-  Pin only after `initialize` and `tools/list` demonstrate interoperability.
+- Official MCP TypeScript SDK: `@modelcontextprotocol/sdk@1.30.0`, pinned for
+  implementation. A raw public `initialize` and `tools/list` probe confirmed the
+  deployed schema. Live interoperability through the official SDK remains
+  unverified; the authenticated search and spoken answer still require a live check.
 - Vitest 5.0.1 for deterministic behavior. One package; no agent framework.
 
 ## Architecture and trust boundary

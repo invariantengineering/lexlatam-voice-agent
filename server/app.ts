@@ -2,12 +2,15 @@ import express from 'express';
 import type { ErrorRequestHandler } from 'express';
 import OpenAI from 'openai';
 import { sessionConfig } from './session';
+import { randomUUID } from 'node:crypto';
+import { createCall } from './call';
 
-export function createApp(apiKey: string | undefined, port: number, client?: OpenAI) {
+export function createApp(apiKey: string | undefined, port: number, client?: OpenAI, token = process.env.LEXLATAM_MCP_TOKEN) {
   const app = express();
   app.disable('x-powered-by');
   const openai = client ?? (apiKey ? new OpenAI({ apiKey, maxRetries: 0, timeout: 20_000 }) : undefined);
   const hosts = new Set([`localhost:${port}`, `127.0.0.1:${port}`]);
+  const calls = new Map<string, Awaited<ReturnType<typeof createCall>>>();
 
   app.use((req, res, next) => {
     if (!hosts.has(req.headers.host ?? '')) {
@@ -24,7 +27,7 @@ export function createApp(apiKey: string | undefined, port: number, client?: Ope
 
   app.get('/api/status', (_req, res) => {
     res.set('Cache-Control', 'no-store').json({
-      ready: Boolean(openai), model: sessionConfig.model, mode: 'voice-only',
+      ready: Boolean(openai && token), model: sessionConfig.model, mode: 'research',
     });
   });
 
@@ -34,32 +37,45 @@ export function createApp(apiKey: string | undefined, port: number, client?: Ope
       res.status(400).json({ error: 'La oferta de audio no es válida.' });
       return;
     }
-    if (!openai) {
-      res.status(503).json({ error: 'Configura OPENAI_API_KEY en .env y reinicia el servidor.' });
+    if (!openai || !token) {
+      res.status(503).json({ error: 'Configura OPENAI_API_KEY y LEXLATAM_MCP_TOKEN en .env y reinicia el servidor.' });
       return;
     }
+    for (const [id, call] of calls) if (call.status().closed) calls.delete(id);
+    if (calls.size >= 4) { res.status(429).json({ error: 'Termina las sesiones abiertas antes de iniciar otra.' }); return; }
     const controller = new AbortController();
     const abort = () => { if (!res.writableEnded) controller.abort(); };
     res.on('close', abort);
     try {
-      const response = await openai.realtime.calls.create(
-        { sdp: req.body, session: sessionConfig },
-        { signal: controller.signal },
-      );
-      const answer = await response.text();
-      if (!answer.startsWith('v=0')) throw new Error('Invalid SDP answer');
-      if (!controller.signal.aborted) res.type('application/sdp').send(answer);
+      const call = await createCall(openai, token, req.body, controller.signal);
+      if (controller.signal.aborted) { await call.close(); return; }
+      const id = randomUUID();
+      calls.set(id, call);
+      res.json({ id, sdp: call.sdp });
     } catch (error) {
       if (controller.signal.aborted) return;
       const timeout = error instanceof OpenAI.APIConnectionTimeoutError;
       res.status(timeout ? 504 : 502).json({
         error: timeout
           ? 'La conexión tardó demasiado. Vuelve a intentarlo.'
-          : 'No se pudo iniciar la sesión de voz. Revisa la clave, el acceso al modelo y la conexión.',
+          : 'No se pudo conectar la voz y la búsqueda. Revisa las credenciales y la conexión.',
       });
     } finally {
       res.off('close', abort);
     }
+  });
+
+  app.get('/api/session/:id', (req, res) => {
+    const call = calls.get(req.params.id);
+    res.set('Cache-Control', 'no-store');
+    if (!call) { res.status(404).json({ error: 'La sesión terminó.' }); return; }
+    res.json(call.status());
+  });
+  app.delete('/api/session/:id', async (req, res) => {
+    const call = calls.get(req.params.id);
+    calls.delete(req.params.id);
+    await call?.close();
+    res.sendStatus(204);
   });
 
   const handleError: ErrorRequestHandler = (error, _req, res, _next) => {

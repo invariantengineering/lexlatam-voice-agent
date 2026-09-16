@@ -26,6 +26,11 @@ button { font: inherit; font-size: 14px; font-weight: 550; border: 1px solid #24
 button:focus-visible, a:focus-visible { outline: 3px solid #b88732; outline-offset: 4px; }
 .note { color: #68736b; font-size: 12px; line-height: 1.6; margin: 16px 0 28px; }
 .technical { display: flex; flex-direction: column; gap: 7px; border-top: 1px solid #dfe2da; padding-top: 18px; color: #68736b; font-size: 11px; }
+.research { margin-top: 24px; padding-top: 20px; border-top: 1px solid #dfe2da; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.research article { margin-top: 20px; padding-top: 16px; border-top: 1px solid #dfe2da; }
+.research h3 { font-size: 14px; margin: 0; }
+.research p { margin: 8px 0; }
+.research a { color: #244b3b; }
 .error { color: #863b27; font-size: 13px; line-height: 1.6; border-left: 2px solid #ad624b; padding-left: 12px; overflow-wrap: anywhere; }
 .conversation { padding: 28px; min-width: 0; }
 .section-top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }

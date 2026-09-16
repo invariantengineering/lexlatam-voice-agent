@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { RealtimeServerEvent } from 'openai/resources/realtime/realtime';
 import { VoiceSession } from './voice';
+import type { ToolStatus } from '../server/mcp';
 
 type State = 'IDLE' | 'CONNECTING' | 'LISTENING' | 'THINKING' | 'SPEAKING' | 'ERROR';
 type Transcript = { id: string; role: 'user' | 'assistant'; text: string; time: string };
@@ -13,6 +14,7 @@ export default function App() {
   const [state, setState] = useState<State>('IDLE');
   const [error, setError] = useState('');
   const [transcripts, setTranscripts] = useState<Transcript[]>([]);
+  const [tool, setTool] = useState<ToolStatus | null>(null);
   const audio = useRef<HTMLAudioElement>(null);
   const session = useRef<VoiceSession | null>(null);
   const connected = !['IDLE', 'ERROR'].includes(state);
@@ -57,10 +59,12 @@ export default function App() {
     session.current?.close();
     setError('');
     setTranscripts([]);
+    setTool(null);
     setState('CONNECTING');
     const next = new VoiceSession(audio.current, {
       onConnected: () => setState('LISTENING'),
       onEvent: receive,
+      onTool: setTool,
       onError: (message) => { setError(message); setState('ERROR'); },
     });
     session.current = next;
@@ -84,7 +88,7 @@ export default function App() {
       <section className="intro">
         <p className="eyebrow">CONVERSACIÓN EN TIEMPO REAL</p>
         <h1>Empecemos por<br />una conversación.</h1>
-        <p className="lede">Habla en español y escucha la respuesta. La búsqueda jurídica se conectará en la siguiente etapa.</p>
+        <p className="lede">Pregunta sobre derecho panameño. LexLatam busca las fuentes y el agente responde en español.</p>
       </section>
 
       <div className="workspace">
@@ -93,7 +97,7 @@ export default function App() {
           <div className="state" role="status">
             <span className={`status-dot ${connected ? 'active' : ''}`} />{labels[state]}
           </div>
-          <p className="prompt">Prueba con: “Hola, ¿puedes ayudarme a practicar una conversación en español?”</p>
+          <p className="prompt">Prueba con: “¿Qué regula la Ley 81 de 2019 en Panamá?”</p>
           <button className={connected ? 'secondary' : 'primary'} onClick={connected ? stop : start}>
             {connected ? 'Terminar conversación' : state === 'ERROR' ? 'Volver a intentar' : 'Iniciar conversación'}
             <span aria-hidden="true">{connected ? '■' : '↗'}</span>
@@ -101,6 +105,22 @@ export default function App() {
           <p className="note">El micrófono se activa al comenzar y se libera al terminar. El audio se envía a OpenAI durante la sesión.</p>
           {error && <p className="error" role="alert">{error}</p>}
           <div className="technical"><span>OpenAI Realtime</span><span>WebRTC · Español</span></div>
+          <div className="research" aria-live="polite">
+            <h2>Búsqueda jurídica</h2>
+            {tool ? <>
+              <p><code>{tool.name}</code></p>
+              <p>{tool.state === 'running' ? 'Buscando fuentes…' : tool.state === 'success' ? 'Consulta completada' : 'No se pudo verificar la consulta'}
+                {tool.latencyMs !== undefined && ` · ${(tool.latencyMs / 1000).toFixed(1)} s`}</p>
+              {tool.state === 'success' && tool.sources.length === 0 && <p>No se encontraron fuentes para esta consulta.</p>}
+              {tool.sources.map((source, index) => <article key={index}>
+                <h3>{source.title}</h3><p>{source.citation}</p><p>{source.excerpt}</p>
+                {(source.date || source.gaceta) && <p>{[source.date, source.gaceta && `Gaceta ${source.gaceta}`].filter(Boolean).join(' · ')}</p>}
+                {source.official_source_url
+                  ? <a href={source.official_source_url} target="_blank" rel="noopener noreferrer">{source.official_source_name || 'Abrir fuente oficial'} ↗</a>
+                  : source.official_source_name && <p>{source.official_source_name}</p>}
+              </article>)}
+            </> : <p>La consulta aparecerá aquí cuando solicites información jurídica.</p>}
+          </div>
         </section>
 
         <section className="conversation" aria-labelledby="conversation-title">
@@ -117,7 +137,7 @@ export default function App() {
           )}
         </section>
       </div>
-      <footer><span>MCP pendiente de integración</span><span>Sin fuentes jurídicas verificadas en esta etapa.</span></footer>
+      <footer><span>Fuentes de LexLatam · MCP</span><span>Información orientativa. Verifica la fuente, vigencia y aplicabilidad.</span></footer>
       <audio ref={audio} autoPlay />
     </main>
   );
