@@ -1,12 +1,12 @@
 import OpenAI from 'openai';
-import { OpenAIRealtimeWebSocket } from 'openai/realtime/websocket';
+import { OpenAIRealtimeWS } from 'openai/realtime/ws';
 import { connectResearch, parseQuery } from './mcp';
 import type { ToolStatus } from './mcp';
 import { sessionConfig } from './session';
 
 export async function createCall(openai: OpenAI, token: string, sdp: string, signal: AbortSignal) {
   const research = await connectResearch(token);
-  let socket: OpenAIRealtimeWebSocket | undefined;
+  let socket: OpenAIRealtimeWS | undefined;
   let callId: string | undefined;
   let closed = false;
   let turn = 0;
@@ -35,7 +35,7 @@ export async function createCall(openai: OpenAI, token: string, sdp: string, sig
     callId = response.headers.get('location')?.split('/').pop();
     const answer = await response.text();
     if (!callId || !answer.startsWith('v=0')) throw new Error('Invalid call response');
-    socket = new OpenAIRealtimeWebSocket({ callID: callId }, openai);
+    socket = new OpenAIRealtimeWS({ callID: callId }, openai);
     const sideband = socket;
     sideband.on('error', () => { failure = true; void close(); });
     sideband.socket.addEventListener('close', () => { if (!closed) { failure = true; void close(); } });

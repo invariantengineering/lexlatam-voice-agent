@@ -8,8 +8,8 @@ vi.mock('./mcp', async (original) => ({
   ...await original<typeof import('./mcp')>(),
   connectResearch: vi.fn(async () => ({ search: mocks.search, close: mocks.close })),
 }));
-vi.mock('openai/realtime/websocket', () => ({
-  OpenAIRealtimeWebSocket: class extends EventEmitter {
+vi.mock('openai/realtime/ws', () => ({
+  OpenAIRealtimeWS: class extends EventEmitter {
     socket = new EventTarget();
     send = vi.fn();
     close = vi.fn();
