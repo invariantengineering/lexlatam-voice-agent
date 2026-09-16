@@ -50,6 +50,11 @@ export async function connectResearch(token: string) {
   const client = new Client({ name: 'lexlatam-voice', version: '0.1.0' });
   const transport = new StreamableHTTPClientTransport(endpoint, {
     requestInit: { headers: { Authorization: `Bearer ${token}` } },
+    // Locally opt out of unused standalone notifications for endpoint compatibility.
+    // POST requests, including their SSE responses, still use the SDK transport.
+    fetch: (url, init) => init?.method === 'GET'
+      ? Promise.resolve(new Response(null, { status: 405 }))
+      : fetch(url, init),
   });
   try {
     await client.connect(transport, { timeout: 15_000 });
