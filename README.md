@@ -1,42 +1,80 @@
 # LexLatam Voice Agent
 
-A realtime voice-agent engineering demo that uses [LexLatam](https://www.lexlatam.ai/) through the Model Context Protocol (MCP) for grounded legal research.
+A small Spanish voice demo connecting OpenAI Realtime to
+[LexLatam's public MCP service](https://www.lexlatam.ai/servidor-mcp-panama).
+Ask a question about Panamanian law, see the legal-search call and its duration,
+and hear a concise answer based on retrieved evidence.
 
-The project is intentionally small: its purpose is to demonstrate realtime voice interaction, MCP tool use, interruption handling, grounding, and latency observability—not to build another legal-research product.
+**Verification status:** Live Spanish audio and authenticated legal search still
+require verification. Local tests and builds do not establish end-to-end success.
 
-> **Status:** Early technical spike / work in progress.
+## Run locally
 
-## What this demonstrates
+Requires Node.js 24+, an OpenAI API key with access to `gpt-realtime-2.1`, a
+LexLatam MCP bearer token, and a browser with microphone access on localhost.
+Provider usage may incur charges against the configured accounts.
 
-The target interaction is simple:
+From the repository root, install the locked dependencies:
 
-1. A user asks a legal-research question by voice.
-2. A realtime AI agent determines that legal research is required.
-3. The agent invokes LexLatam through MCP.
-4. LexLatam returns structured legal-search results.
-5. The agent responds conversationally using the returned evidence.
-6. The user can interrupt the agent while it is speaking.
-7. The UI exposes tool calls, state transitions, interruptions, and latency.
+```sh
+npm ci
+```
 
-The goal is to make the important systems behavior visible rather than hide everything behind a chatbot UI.
+For a new checkout, create your local configuration:
 
-## Architecture
+```sh
+cp .env.example .env
+```
+
+Fill in `OPENAI_API_KEY` and `LEXLATAM_MCP_TOKEN` in `.env`. The MCP endpoint
+defaults to `https://app.lexlatam.ai/mcp/`. Keep credentials server-side; never
+prefix them with `VITE_` or commit `.env`.
+
+Start the app, then open [localhost:3001](http://localhost:3001):
+
+```sh
+npm run dev
+```
+
+Click **Iniciar conversación**, allow the microphone, and ask:
+“¿Qué normas regulan las vacaciones anuales de los trabajadores en Panamá?”
+The tool panel should show `search_panama_law`, its status and elapsed time.
+Check the spoken answer against the returned citations. If evidence is missing
+or the search fails, the answer should acknowledge that limitation. Click
+**Terminar conversación** to release the microphone and end the session.
+
+## Checks
+
+```sh
+npm run typecheck
+npm test
+npm run build
+```
+
+To serve the built frontend locally after a successful build:
+
+```sh
+npm start
+```
+
+## How it works
 
 ```mermaid
 flowchart LR
-    U[User / Microphone] --> B[Browser Voice UI]
-    B <--> R[Realtime Voice Model]
-    R -->|tool request| A[Voice Agent Backend]
-    A -->|MCP| M[LexLatam MCP Server]
-    M -->|structured legal results| A
-    A --> R
-    R -->|streaming audio| B
+    B[React browser] <-->|WebRTC audio and events| R[OpenAI Realtime]
+    B <-->|Session setup and tool status| N[Node backend]
+    N <-->|Sideband session control| R
+    N <-->|Authenticated MCP search| L[LexLatam MCP]
+```
 
-    subgraph Public Repository
-        B
-        A
-    end
+The backend executes only `search_panama_law` through the official MCP client.
+It validates tool arguments and returned evidence before supplying results to
+the voice model. API credentials stay on the backend. Audio goes to OpenAI;
+legal-search queries go to LexLatam. The app does not persist conversations.
 
-    subgraph External System
-        M
-    end
+Sessions end after ten minutes; start another session to continue. This is a
+local demo. Retrieved text can be incomplete or outdated, and retrieval
+does not establish that an authority applies to a particular case. Native voice
+interruption is enabled but has not been evaluated; custom barge-in behavior,
+recorded latency samples and presentation polish are deferred until the first
+live demo is tested. See [the three-milestone plan](PLAN.md).
