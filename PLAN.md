@@ -4,6 +4,22 @@ Deliver a two-minute Spanish conversation that retrieves real LexLatam evidence
 and speaks a grounded answer. The first milestone is a working end-to-end demo,
 with minimal visible state and MCP tool name, status and latency.
 
+## Progress — September 16, 2026
+
+The presenter has confirmed the live Spanish voice demo. A synthetic greeting
+through the application's session API also verified input transcription and
+generated response audio with its transcript. Authenticated MCP initialization
+and tool discovery pass. See the [verification record](docs/architecture.md#verification-record).
+
+Milestone 1 remains open for local private-MCP integration, authenticated legal
+search through the voice application and a grounded spoken response. The current
+client requires HTTPS and has not adopted the local HTTP endpoint or the requested
+120-second read timeout. No remote private-access verification is claimed.
+
+The README, architecture walkthrough and voice screenshot now describe the
+verified checkpoint. A real tool-latency sample remains pending. Optional
+interruption work is deferred; this documentation update does not expand runtime scope.
+
 ## Selected stack
 
 - TypeScript 7.0.2; React 19.3.0; Vite 8.3.0; plain CSS.
@@ -11,11 +27,11 @@ with minimal visible state and MCP tool name, status and latency.
 - OpenAI **Realtime API (GA)**, model `gpt-realtime-2.1`, voice `marin`.
   Browser WebRTC; server-mediated `/v1/realtime/calls` session creation;
   native server VAD. Use Realtime event types consistently.
-- Server sideband WebSocket for tool execution and session control in slice 2.
+- Server sideband WebSocket for tool execution and session control.
 - Official MCP TypeScript SDK: `@modelcontextprotocol/sdk@1.30.0`, pinned for
-  implementation. A raw public `initialize` and `tools/list` probe confirmed the
-  deployed schema. Live interoperability through the official SDK remains
-  unverified; the authenticated search and spoken answer still require a live check.
+  implementation. Authenticated `initialize` and `tools/list` checks through
+  the official SDK confirmed the deployed schema. Search execution and a grounded
+  spoken answer still require a live check in the voice application.
 - Vitest 5.0.1 for deterministic behavior. One package; no agent framework.
 
 ## Architecture and trust boundary
