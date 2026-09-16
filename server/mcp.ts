@@ -1,6 +1,8 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
+const researchTimeoutMs = 120_000;
+
 export type Source = {
   title: string; citation: string; excerpt: string;
   date?: string; gaceta?: string; official_source_name?: string; official_source_url?: string;
@@ -45,8 +47,11 @@ export function parseSources(value: unknown): Source[] {
 }
 
 export async function connectResearch(token: string) {
-  const endpoint = new URL(process.env.LEXLATAM_MCP_URL || 'https://app.lexlatam.ai/mcp/');
-  if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password) throw new Error('Invalid MCP URL');
+  const endpoint = new URL(process.env.LEXLATAM_MCP_URL || 'http://localhost/mcp/');
+  const local = ['localhost', '[::1]', 'host.docker.internal'].includes(endpoint.hostname)
+    || /^127\.(?:\d{1,3}\.){2}\d{1,3}$/.test(endpoint.hostname);
+  if (!(endpoint.protocol === 'https:' || (endpoint.protocol === 'http:' && local))
+    || endpoint.username || endpoint.password) throw new Error('Invalid MCP URL');
   const client = new Client({ name: 'lexlatam-voice', version: '0.1.0' });
   const transport = new StreamableHTTPClientTransport(endpoint, {
     requestInit: { headers: { Authorization: `Bearer ${token}` } },
@@ -54,7 +59,13 @@ export async function connectResearch(token: string) {
     // POST requests, including their SSE responses, still use the SDK transport.
     fetch: (url, init) => init?.method === 'GET'
       ? Promise.resolve(new Response(null, { status: 405 }))
-      : fetch(url, init),
+      : fetch(url, {
+        ...init,
+        // The whole HTTP request, including body consumption, shares this deadline.
+        signal: AbortSignal.any([
+          ...(init?.signal ? [init.signal] : []), AbortSignal.timeout(researchTimeoutMs),
+        ]),
+      }),
   });
   try {
     await client.connect(transport, { timeout: 15_000 });
@@ -67,7 +78,7 @@ export async function connectResearch(token: string) {
     }
     return {
       async search(args: { query: string }, signal: AbortSignal) {
-        const result = await client.callTool({ name: 'search_panama_law', arguments: args }, undefined, { timeout: 30_000, signal });
+        const result = await client.callTool({ name: 'search_panama_law', arguments: args }, undefined, { timeout: researchTimeoutMs, signal });
         if (result.isError) throw new Error('Research failed');
         return parseSources(result.structuredContent);
       },

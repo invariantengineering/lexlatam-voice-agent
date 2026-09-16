@@ -11,10 +11,10 @@ through the application's session API also verified input transcription and
 generated response audio with its transcript. Authenticated MCP initialization
 and tool discovery pass. See the [verification record](docs/architecture.md#verification-record).
 
-Milestone 1 remains open for local private-MCP integration, authenticated legal
-search through the voice application and a grounded spoken response. The current
-client requires HTTPS and has not adopted the local HTTP endpoint or the requested
-120-second read timeout. No remote private-access verification is claimed.
+Milestone 1 remains open for live local private-MCP validation, authenticated legal
+search through the voice application and a grounded spoken response. The client
+now supports local HTTP endpoints and a 120-second search deadline covering
+HTTP response-body reads. No remote private-access verification is claimed.
 
 The README, architecture walkthrough and voice screenshot now describe the
 verified checkpoint. A real tool-latency sample remains pending. Optional

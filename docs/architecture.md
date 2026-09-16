@@ -66,12 +66,18 @@ On September 16, 2026:
 - Typecheck, eight deterministic tests and the production build passed before
   this documentation update; CI runs those checks for each PR revision.
 
-Remaining: private-MCP integration against the reachable local endpoint,
+Remaining: private-MCP validation against the reachable local endpoint,
 authenticated search through the voice session, citation-grounded spoken output,
 a recorded tool-latency sample, and a full stop/reconnect acceptance check.
-The existing integration still requires HTTPS and uses a 30-second search request
-timeout; it has not yet adopted the requested local HTTP contract and 120-second
-read timeout. Stage and production private access are not verified.
+The client now defaults to `http://localhost/mcp/`, permits HTTP for loopback and
+`host.docker.internal`, and retains HTTPS for remote services. Each HTTP request
+has a 120-second deadline that also covers response-body consumption; tool calls
+have the same request budget. This bounds the entire request rather than resetting
+the timer whenever data arrives. MCP initialization and tool discovery retain
+their existing 15-second startup limits. Stage and production private access are
+not verified. The deployed endpoint returned a guest-limit tool error during
+testing despite receiving a bearer header, so it is not a substitute for local
+private-access validation.
 
 ## Two-minute demo script
 
@@ -89,5 +95,5 @@ use “¿Qué regula la Ley 81 de 2019 en Panamá?” and compare the answer wit
 tool panel. Report only the measured tool duration, not an inferred voice latency.
 
 **1:25–2:00 — Stop and discuss the tradeoff.** End the session. Explain why native
-VAD and a single tool keep the project small, what the eight tests protect, and
+VAD and a single tool keep the project small, what the focused tests protect, and
 what still requires live verification.

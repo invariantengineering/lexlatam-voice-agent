@@ -12,7 +12,8 @@ through the application's session API verified transcription and a generated
 Spanish audio response. Authenticated MCP initialization and tool discovery
 also pass. Legal search through the voice application, a grounded spoken answer
 and a measured search-latency sample remain to be validated. Local private-MCP
-integration is the next step; this repository is a local demo, not a deployed service.
+connection support is implemented; a live local search still requires acceptance.
+This repository is a local demo, not a deployed service.
 
 ![Spanish conversation transcripts after ending a voice session](docs/images/voice-conversation.png)
 
@@ -34,8 +35,10 @@ cp .env.example .env
 ```
 
 Set `OPENAI_API_KEY` and `LEXLATAM_MCP_TOKEN` in `.env` using your editor.
-`LEXLATAM_MCP_URL` defaults to `https://app.lexlatam.ai/mcp/`; `PORT` defaults
-to `3001`. Credentials stay on the server. Never prefix secrets with `VITE_`,
+The MCP token must match the local research server's `MCP_PRIVATE_TOKEN`.
+`LEXLATAM_MCP_URL` defaults to `http://localhost/mcp/`; `PORT` defaults
+to `3001`. Start the local research server before starting a voice session.
+Credentials stay on the server. Never prefix secrets with `VITE_`,
 paste them into review comments, or commit secret files.
 
 Start the app and open [localhost:3001](http://localhost:3001):
@@ -54,6 +57,18 @@ npm exec -- varlock run -- npm run dev
 This alternative assumes Varlock and its secret resolution are already configured
 locally; that configuration is not included in this repository. Plain `npm run dev`
 loads `.env`, not `.env.local`. Restart after changing server configuration.
+
+If an existing secret workflow still selects the deployed MCP endpoint, keep its
+token configuration and override only the endpoint for the local run:
+
+```sh
+npm exec -- varlock run -- env LEXLATAM_MCP_URL=http://localhost/mcp/ npm run dev
+```
+
+`localhost` refers to the process making the MCP request. When the voice backend
+runs in Docker Desktop on the same Mac, use `http://host.docker.internal/mcp/`
+to reach the host. Other remote endpoints require HTTPS. Deployment and private
+access on stage or production are not part of this demo's verified setup.
 
 ## Try the demo
 
@@ -99,8 +114,10 @@ npm test
 npm run build
 ```
 
-Eight deterministic tests cover argument and evidence validation, tool allowlisting,
+Deterministic tests cover argument and evidence validation, tool allowlisting,
 duplicate and stale calls, MCP startup compatibility, and sideband authentication.
+Additional transport tests cover local endpoints, bearer headers, failed
+authentication, MCP tool errors and the 120-second HTTP deadline.
 They do not replace live audio or legal-search acceptance. To serve the built
 frontend locally, run `npm start` with the same environment configuration.
 
@@ -115,7 +132,9 @@ frontend locally, run `npm start` with the same environment configuration.
   before starting another. A frontend reload does not restart the backend.
 - Sessions have a ten-minute cap. Native VAD interruption is enabled; interruption
   quality has not been evaluated. Pauses can split a sentence into separate turns.
-- The current MCP URL validation requires HTTPS. The local HTTP private-MCP
-  contract still needs integration; changing the URL alone will not enable it.
+- MCP permits HTTP for loopback and `host.docker.internal`, and HTTPS for remote
+  endpoints. Requests carry a bearer token; authentication failures never retry
+  anonymously. A successful HTTP status can still contain an MCP tool error.
+  Search requests have a 120-second deadline, including HTTP response-body reads.
 - Retrieved evidence can be incomplete or outdated. It does not establish legal
   validity or applicability. No production hosting, accounts or persistence are included.
