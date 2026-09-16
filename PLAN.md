@@ -6,22 +6,18 @@ with minimal visible state and MCP tool name, status and latency.
 
 ## Progress — September 16, 2026
 
-The presenter has confirmed the live Spanish voice demo. A synthetic greeting
-through the application's session API also verified input transcription and
-generated response audio with its transcript. Authenticated MCP initialization
-and tool discovery pass. See the [verification record](docs/architecture.md#verification-record).
+All three milestones are complete for the local portfolio demo. The presenter
+confirmed Spanish voice, cited answers through authenticated local MCP, native
+barge-in, the more patient semantic turn detection, and stopping/restarting without
+reloading. Live examples cover Law 81 and the Labor Code's probation period;
+an unsupported follow-up acknowledged incomplete evidence.
 
-The presenter has now exercised the local MCP voice flow with a cited Law 81
-answer and confirmed deliberate barge-in. The follow-up acknowledged incomplete
-evidence. The client
-now supports local HTTP endpoints and a 120-second search deadline covering
-HTTP response-body reads. No remote private-access verification is claimed.
-
-The README, architecture walkthrough and voice screenshot now describe the
-verified checkpoint. A real tool-latency sample remains pending. Optional
-custom interruption work is unnecessary for the demonstrated case. A minimal
-native semantic-VAD adjustment now gives the speaker more time to finish; live
-validation of the new timing and a complete stop/reconnect check remain pending.
+The README, architecture diagram, real conversation screenshot, 4.2-second tool
+sample and two-minute demo script are recorded. A video can be linked after
+recording; it is not a code-merge requirement. See the
+[verification record](docs/architecture.md#verification-record).
+Custom interruption infrastructure and remote deployment remain out of scope.
+This reduced three-milestone plan supersedes the original PRD's broader slice list.
 
 ## Selected stack
 
@@ -32,9 +28,8 @@ validation of the new timing and a complete stop/reconnect check remain pending.
   native semantic VAD with low eagerness. Use Realtime event types consistently.
 - Server sideband WebSocket for tool execution and session control.
 - Official MCP TypeScript SDK: `@modelcontextprotocol/sdk@1.30.0`, pinned for
-  implementation. Authenticated `initialize` and `tools/list` checks through
-  the official SDK confirmed the deployed schema. Search execution and a grounded
-  spoken answer still require a live check in the voice application.
+  implementation. Authenticated initialization, tool discovery and real searches
+  have been exercised through the local MCP voice flow.
 - Vitest 5.0.1 for deterministic behavior. One package; no agent framework.
 
 ## Architecture and trust boundary
@@ -50,23 +45,26 @@ flowchart LR
     end
 ```
 
-The backend alone executes `search_panama_law` at
-`https://app.lexlatam.ai/mcp/`. Discover the deployed schema, validate arguments,
-deduplicate tool-call IDs, bound and validate results, and reject stale results
-before supplying evidence to the model. No LexLatam code or internal data enters
-this repository. Adapt authentication only to its published contract.
+The backend alone executes `search_panama_law` at the configured
+`LEXLATAM_MCP_URL`, defaulting to `http://localhost/mcp/`. It discovers the schema,
+validates arguments, deduplicates tool-call IDs, bounds and validates results,
+and rejects stale results before supplying evidence to the model. No proprietary
+retrieval implementation enters this repository. Remote private access remains
+unverified; local HTTP requests use a 120-second deadline including body reads.
 
 ## Three milestones
 
-1. **Working demo (2–4 active hours):** confirm access and contracts (15–30 min),
+The original active-work estimate is retained below; it is not a time log.
+
+1. **Complete — Working demo (estimated 2–4 active hours):** confirm access and contracts (15–30 min),
    complete the Spanish voice loop (30–60 min), connect real legal research
    (45–90 min), then show minimal state/tool timing and verify the complete flow
    (30–60 min). Use one implementer and report a runnable checkpoint or a specific
    blocker after each step. Stop for the presenter's test before further work.
-2. **Optional barge-in:** assess native WebRTC/VAD interruption first. Add only
+2. **Complete — Optional barge-in:** assess native WebRTC/VAD interruption first. Add only
    essential stale-turn protection if straightforward. Limit custom work to
    45 minutes; otherwise defer it and document the limitation.
-3. **Portfolio polish:** concise README, architecture Mermaid, one screenshot,
+3. **Complete — Portfolio polish:** concise README, architecture Mermaid, one screenshot,
    one real latency sample and a two-minute demo script. Stop.
 
 Run typecheck and build, plus trivial tests protecting important deterministic

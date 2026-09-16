@@ -6,15 +6,17 @@ legal sources through [LexLatam MCP](https://www.lexlatam.ai/servidor-mcp-panama
 The implementation focuses on streaming audio, tool execution, evidence
 validation and session cleanup in one TypeScript application.
 
-**Current status — September 16, 2026:** Live Spanish conversation works.
-The presenter confirmed the voice demo, and a separate synthetic-audio check
-through the application's session API verified transcription and a generated
-Spanish audio response. Authenticated MCP initialization and tool discovery
-also pass. The presenter subsequently reported a cited Law 81 answer through the
-local MCP voice flow and successful deliberate barge-in. Follow-up behavior
-acknowledged incomplete evidence. A measured tool-latency sample and complete
-stop/reconnect check remain to be recorded.
-This repository is a local demo, not a deployed service.
+**Solo project, built in under 24 hours using AI-assisted coding tools.**
+That timeframe covers this voice application, which integrates with LexLatam,
+my separate, existing legal-research platform. Its proprietary retrieval
+implementation stays behind the MCP interface.
+
+**Verified locally — September 16, 2026:** Spanish speech and transcripts,
+authenticated legal search with citations, deliberate barge-in, more patient
+turn detection, and stopping/restarting without reloading. A live search in the
+probation-period demo completed in **4.2 seconds** with three sources; this is one
+tool-duration sample, not a voice-latency benchmark. This is a local portfolio
+demo, not a deployed service.
 
 ![Spanish conversation transcripts after ending a voice session](docs/images/voice-conversation.png)
 
@@ -27,6 +29,8 @@ Requires Node.js 24+, an OpenAI API key with access to `gpt-realtime-2.1`, a
 LexLatam MCP bearer token, and a browser with microphone access on localhost.
 Provider usage may incur charges against the configured accounts. The current
 startup path requires MCP initialization even for a greeting.
+The LexLatam backend is a separate prerequisite and is not included in this
+repository; running the full demo requires access to that service.
 
 From a new checkout, install locked dependencies and create local configuration:
 
@@ -81,11 +85,16 @@ access on stage or production are not part of this demo's verified setup.
 3. Click **Terminar conversación**. The app returns to **Lista para comenzar**
    and releases the microphone. Starting another session clears the previous transcript.
 
-To demonstrate legal research, ask “¿Cuál es el objeto de la Ley 81 de 2019 sobre protección de datos personales en Panamá?”
+To demonstrate legal research, ask “Según el Código de Trabajo de Panamá, ¿qué
+puede hacer cualquiera de las partes durante el período probatorio?” Follow up
+with “¿Cuánto puede durar ese período? ¿Tiene que constar expresamente en el
+contrato escrito?” Then interrupt the reply: “Espera, disculpa. ¿Qué pasa si el
+trabajador ya había ocupado esa misma posición en la misma empresa?”
+
 Expect a real `search_panama_law` call, status and duration, followed by a spoken
 answer supported by the returned citations. If evidence is missing or the search
-fails, the answer should acknowledge that limitation. The Law 81 example has
-been exercised by the presenter; retrieved-source quality remains a dependency
+fails, the answer should acknowledge that limitation. This sequence has been
+exercised live; retrieved-source quality remains a dependency
 of the research service, and the voice agent must accurately convey its limits.
 
 ## Architecture
@@ -106,7 +115,7 @@ frontend bundle. The app stores conversation state only in memory.
 
 Read the [architecture walkthrough](docs/architecture.md) for the request flow,
 design choices, failure boundaries and a two-minute demo script. The
-[three-milestone plan](PLAN.md) tracks the remaining scope.
+[three-milestone plan](PLAN.md) records the completed scope.
 
 ## Checks
 
@@ -134,8 +143,8 @@ frontend locally, run `npm start` with the same environment configuration.
   before starting another. A frontend reload does not restart the backend.
 - Sessions have a ten-minute cap. Native semantic turn detection uses low
   eagerness to allow thinking pauses. It may take longer to respond when a turn
-  sounds unfinished. Barge-in remains enabled; the presenter confirmed deliberate
-  interruption with the previous turn detector. Retest it with this setting.
+  sounds unfinished. Deliberate barge-in and the adjusted pacing have been
+  accepted in live testing; native detection can still misjudge a pause.
 - MCP permits HTTP for loopback and `host.docker.internal`, and HTTPS for remote
   endpoints. Requests carry a bearer token; authentication failures never retry
   anonymously. A successful HTTP status can still contain an MCP tool error.
