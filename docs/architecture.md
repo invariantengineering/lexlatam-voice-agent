@@ -16,7 +16,8 @@ official service SDKs, with no agent framework, database or provider abstraction
    Spanish session configuration, then attaches an authenticated sideband
    WebSocket to the returned call ID. The browser applies the SDP answer and
    exchanges audio directly with Realtime over WebRTC.
-4. **Recognize a turn.** Server VAD detects speech and the following pause.
+4. **Recognize a turn.** Native semantic VAD estimates whether the speaker has
+   finished a thought. Low eagerness gives more room for pauses while speaking.
    Realtime sends completed input transcription and response-audio transcript
    events. `src/App.tsx` renders them while the browser plays the incoming audio.
    Transcription displays the audio exchange; there is no separate text-model pipeline.
@@ -35,7 +36,7 @@ official service SDKs, with no agent framework, database or provider abstraction
 | --- | --- |
 | WebRTC for browser audio | Uses browser media transport directly; the application backend does not relay every audio packet. Microphone permissions and speaker playback still need browser testing. |
 | Server-side session creation and sideband | Keeps credentials and tool execution on the backend. The Node WebSocket transport supplies bearer-header authentication for call attachment. |
-| Native server VAD | Avoids a custom interruption system. The configured 500 ms silence threshold can split speech at pauses; interruption quality is not yet evaluated. |
+| Native semantic VAD, low eagerness | Allows thinking pauses without a custom turn detector. It considers whether speech sounds complete rather than ending every turn after 500 ms of silence. Responses can take longer when completion is uncertain. Automatic response and barge-in remain enabled. |
 | One tool with bounded evidence | Queries accept only a nonempty `query` string of at most 2,000 characters. At most three validated sources enter the response, including citations and safe source links. |
 | Duplicate and stale-call guards | A set of call IDs prevents repeated execution. A turn counter prevents results from an older turn from grounding the current response. This does not establish comprehensive concurrency guarantees. |
 | Polling for tool status | A one-second poll keeps the UI simple. Display updates may lag execution; the shown tool duration measures backend validation and search handling, not end-to-end voice latency. |
@@ -66,9 +67,17 @@ On September 16, 2026:
 - Typecheck, eight deterministic tests and the production build passed before
   this documentation update; CI runs those checks for each PR revision.
 
-Remaining: private-MCP validation against the reachable local endpoint,
-authenticated search through the voice session, citation-grounded spoken output,
-a recorded tool-latency sample, and a full stop/reconnect acceptance check.
+The presenter subsequently reported a Law 81 answer citing retrieved evidence
+through the local MCP voice flow. A follow-up acknowledged incomplete evidence,
+and deliberate interruptions stopped speech as expected. Pauses while forming a
+Spanish question were split too eagerly by the original 500 ms silence detector.
+The session now uses [semantic VAD with low eagerness](https://developers.openai.com/api/docs/guides/realtime-vad#semantic-vad).
+Its pacing and interruption behavior still need a live check with the presenter.
+
+Remaining: validation of the adjusted turn timing, a recorded tool-latency sample,
+and a full stop/reconnect acceptance check. Retrieval relevance and currency are
+research-service concerns; the voice layer remains responsible for representing
+the returned evidence and its limitations faithfully.
 The client now defaults to `http://localhost/mcp/`, permits HTTP for loopback and
 `host.docker.internal`, and retains HTTPS for remote services. Each HTTP request
 has a 120-second deadline that also covers response-body consumption; tool calls
@@ -88,11 +97,11 @@ voice service. A small backend owns credentials and executes legal research.”
 **Escuchando**, and say “Hola, respóndeme brevemente en español.” Pause, listen
 to the reply and point out the completed transcripts.
 
-**0:55–1:25 — Explain tool execution.** Show the architecture diagram and describe
-the validated query, returned citations and stale-result guard. Until legal-search
-acceptance passes, describe this as the next integration step. Once validated,
-use “¿Qué regula la Ley 81 de 2019 en Panamá?” and compare the answer with the
-tool panel. Report only the measured tool duration, not an inferred voice latency.
+**0:55–1:25 — Demonstrate tool execution.** Ask “¿Cuál es el objeto de la Ley 81
+de 2019 sobre protección de datos personales en Panamá?” Compare the spoken answer
+with the tool panel and identify the returned citation. Explain the validated
+query and stale-result guard. Report only the measured tool duration, not an
+inferred voice latency.
 
 **1:25–2:00 — Stop and discuss the tradeoff.** End the session. Explain why native
 VAD and a single tool keep the project small, what the focused tests protect, and

@@ -10,9 +10,10 @@ validation and session cleanup in one TypeScript application.
 The presenter confirmed the voice demo, and a separate synthetic-audio check
 through the application's session API verified transcription and a generated
 Spanish audio response. Authenticated MCP initialization and tool discovery
-also pass. Legal search through the voice application, a grounded spoken answer
-and a measured search-latency sample remain to be validated. Local private-MCP
-connection support is implemented; a live local search still requires acceptance.
+also pass. The presenter subsequently reported a cited Law 81 answer through the
+local MCP voice flow and successful deliberate barge-in. Follow-up behavior
+acknowledged incomplete evidence. A measured tool-latency sample and complete
+stop/reconnect check remain to be recorded.
 This repository is a local demo, not a deployed service.
 
 ![Spanish conversation transcripts after ending a voice session](docs/images/voice-conversation.png)
@@ -80,11 +81,12 @@ access on stage or production are not part of this demo's verified setup.
 3. Click **Terminar conversación**. The app returns to **Lista para comenzar**
    and releases the microphone. Starting another session clears the previous transcript.
 
-For the next acceptance check, ask “¿Qué regula la Ley 81 de 2019 en Panamá?”
+To demonstrate legal research, ask “¿Cuál es el objeto de la Ley 81 de 2019 sobre protección de datos personales en Panamá?”
 Expect a real `search_panama_law` call, status and duration, followed by a spoken
 answer supported by the returned citations. If evidence is missing or the search
-fails, the answer should acknowledge that limitation. This legal-search flow is
-implemented but has not yet passed live acceptance in the voice application.
+fails, the answer should acknowledge that limitation. The Law 81 example has
+been exercised by the presenter; retrieved-source quality remains a dependency
+of the research service, and the voice agent must accurately convey its limits.
 
 ## Architecture
 
@@ -130,8 +132,10 @@ frontend locally, run `npm start` with the same environment configuration.
   MCP initialization, voice session creation or sideband attachment can fail setup.
 - **Port 3001 already in use:** use the existing server or stop it in its terminal
   before starting another. A frontend reload does not restart the backend.
-- Sessions have a ten-minute cap. Native VAD interruption is enabled; interruption
-  quality has not been evaluated. Pauses can split a sentence into separate turns.
+- Sessions have a ten-minute cap. Native semantic turn detection uses low
+  eagerness to allow thinking pauses. It may take longer to respond when a turn
+  sounds unfinished. Barge-in remains enabled; the presenter confirmed deliberate
+  interruption with the previous turn detector. Retest it with this setting.
 - MCP permits HTTP for loopback and `host.docker.internal`, and HTTPS for remote
   endpoints. Requests carry a bearer token; authentication failures never retry
   anonymously. A successful HTTP status can still contain an MCP tool error.

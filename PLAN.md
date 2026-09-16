@@ -11,14 +11,17 @@ through the application's session API also verified input transcription and
 generated response audio with its transcript. Authenticated MCP initialization
 and tool discovery pass. See the [verification record](docs/architecture.md#verification-record).
 
-Milestone 1 remains open for live local private-MCP validation, authenticated legal
-search through the voice application and a grounded spoken response. The client
+The presenter has now exercised the local MCP voice flow with a cited Law 81
+answer and confirmed deliberate barge-in. The follow-up acknowledged incomplete
+evidence. The client
 now supports local HTTP endpoints and a 120-second search deadline covering
 HTTP response-body reads. No remote private-access verification is claimed.
 
 The README, architecture walkthrough and voice screenshot now describe the
 verified checkpoint. A real tool-latency sample remains pending. Optional
-interruption work is deferred; this documentation update does not expand runtime scope.
+custom interruption work is unnecessary for the demonstrated case. A minimal
+native semantic-VAD adjustment now gives the speaker more time to finish; live
+validation of the new timing and a complete stop/reconnect check remain pending.
 
 ## Selected stack
 
@@ -26,7 +29,7 @@ interruption work is deferred; this documentation update does not expand runtime
 - Node.js 24+; Express 5.2.1; official OpenAI SDK 7.15.0.
 - OpenAI **Realtime API (GA)**, model `gpt-realtime-2.1`, voice `marin`.
   Browser WebRTC; server-mediated `/v1/realtime/calls` session creation;
-  native server VAD. Use Realtime event types consistently.
+  native semantic VAD with low eagerness. Use Realtime event types consistently.
 - Server sideband WebSocket for tool execution and session control.
 - Official MCP TypeScript SDK: `@modelcontextprotocol/sdk@1.30.0`, pinned for
   implementation. Authenticated `initialize` and `tools/list` checks through
