@@ -58,7 +58,8 @@ returned citations. Retrieval does not establish the law's applicability.
 On September 16, 2026:
 
 - The presenter confirmed the live voice demo; the [capture](images/voice-conversation.png)
-  shows user and agent transcripts and the UI returned to its idle state.
+  shows the probation-period conversation, a successful MCP search with its
+  measured duration and three sources, and the UI returned to its idle state.
 - A synthetic Spanish greeting sent through the application's actual
   `POST /api/session` path produced a completed input transcription, response
   audio events and a completed Spanish response transcript. This check did not
@@ -113,8 +114,8 @@ private-access validation.
 
 ## Two-minute demo script
 
-Target roughly two minutes; leave room for actual search and response times.
-The recording is a follow-up artifact, not a prerequisite for merging the demo.
+Watch the [recorded demonstration](../README.md#demo). The script below targets
+roughly two minutes, allowing room for actual search and response times.
 
 **0:00–0:30 — English architecture intro.** Show the README diagram briefly:
 

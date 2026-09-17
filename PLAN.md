@@ -13,8 +13,8 @@ reloading. Live examples cover Law 81 and the Labor Code's probation period;
 an unsupported follow-up acknowledged incomplete evidence.
 
 The README, architecture diagram, real conversation screenshot, 4.2-second tool
-sample and two-minute demo script are recorded. A video can be linked after
-recording; it is not a code-merge requirement. See the
+sample and two-minute demo script are recorded. The README links to the
+published video demonstration. See the
 [verification record](docs/architecture.md#verification-record).
 Custom interruption infrastructure and remote deployment remain out of scope.
 This reduced three-milestone plan supersedes the original PRD's broader slice list.
