@@ -114,8 +114,8 @@ private-access validation.
 
 ## Two-minute demo script
 
-Target roughly two minutes; leave room for actual search and response times.
-The recording is a follow-up artifact, not a prerequisite for merging the demo.
+Watch the [recorded demonstration](../README.md#demo). The script below targets
+roughly two minutes, allowing room for actual search and response times.
 
 **0:00–0:30 — English architecture intro.** Show the README diagram briefly:
 

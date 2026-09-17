@@ -6,6 +6,14 @@ legal sources through [LexLatam MCP](https://www.lexlatam.ai/servidor-mcp-panama
 The implementation focuses on streaming audio, tool execution, evidence
 validation and session cleanup in one TypeScript application.
 
+## Demo
+
+▶️ **[Watch the realtime voice + MCP demo on YouTube](https://youtu.be/ARSjlUxTRd0)**
+
+The demo shows a live Spanish-language conversation in which the realtime
+voice agent searches Panamanian law through LexLatam's MCP server and uses the
+retrieved legal sources to ground its spoken response.
+
 **Solo project, built in under 24 hours using AI-assisted coding tools.**
 That timeframe covers this voice application, which integrates with LexLatam,
 my separate, existing legal-research platform. Its proprietary retrieval
