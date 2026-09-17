@@ -18,10 +18,11 @@ probation-period demo completed in **4.2 seconds** with three sources; this is o
 tool-duration sample, not a voice-latency benchmark. This is a local portfolio
 demo, not a deployed service.
 
-![Spanish conversation transcripts after ending a voice session](docs/images/voice-conversation.png)
+![Spanish labor-law conversation with a successful MCP search, 4.2-second tool duration and three retrieved sources](docs/images/voice-conversation.png)
 
-The conversation remains visible after the session ends. This capture shows
-voice interaction; no legal search was triggered.
+The conversation and retrieved evidence remain visible after the session ends.
+This capture shows the probation-period demo, a successful `search_panama_law`
+call, its measured tool duration and source excerpts with citations.
 
 ## Run locally
 
