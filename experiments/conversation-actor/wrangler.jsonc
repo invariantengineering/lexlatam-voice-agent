@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "lexlatam-conversation-actor-experiment",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-09",
+  "durable_objects": {
+    "bindings": [{ "name": "CONVERSATIONS", "class_name": "ConversationActor" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ConversationActor"] }]
+}
