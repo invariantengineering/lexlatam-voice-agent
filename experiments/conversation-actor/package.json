@@ -1,0 +1,16 @@
+{
+  "name": "conversation-actor-experiment",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/actor.test.mjs",
+    "demo": "node scripts/demo.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261110.1",
+    "typescript": "^5.9.3",
+    "wrangler": "4.159.0"
+  }
+}
