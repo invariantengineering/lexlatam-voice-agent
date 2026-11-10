@@ -2,6 +2,8 @@
 
 This isolated experiment uses a Cloudflare Durable Object with SQLite storage to coordinate one voice conversation. It does not run the realtime voice transport or call the LexLatam MCP service. `search_panama_law` results are deterministic fixtures delivered through a separate command.
 
+Run this experiment locally only. Its HTTP endpoints have no authentication or authorization, so anyone who knows a conversation ID could read or change that conversation's state if the Worker were deployed publicly. Do not deploy it publicly without adding both checks.
+
 ```mermaid
 flowchart LR
   Driver[Local driver or test] --> Worker[Worker HTTP route]
