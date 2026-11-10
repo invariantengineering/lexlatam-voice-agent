@@ -81,6 +81,11 @@ test('SQLite backed actors coordinate overlapping turns, duplicates, late result
     assert.equal((await command(runtime.base, first, {
       type: 'complete_search', commandId: 'result_2', callId: 'call_2', results: [source],
     })).outcome, 'result_accepted');
+    const differentSource = { title: 'Different source', citation: 'SIM-2', excerpt: 'Should not replace the first result.' };
+    assert.deepEqual(await command(runtime.base, first, {
+      type: 'complete_search', commandId: 'result_2_repeat', callId: 'call_2', results: [differentSource],
+    }), { duplicateCommand: false, outcome: 'duplicate_result', status: 'accepted', generation: 4 });
+    assert.deepEqual((await state(runtime.base, first)).searches[1].results, [source]);
 
     await command(runtime.base, first, {
       type: 'start_search', commandId: 'search_3', callId: 'call_3', generation: 4, query: 'Pending at restart',
