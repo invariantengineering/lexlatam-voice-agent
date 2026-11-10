@@ -5,6 +5,34 @@ import { command, startRuntime, state, stopRuntime } from '../scripts/runtime.mj
 
 const source = { title: 'Simulated legal source', citation: 'SIM-1', excerpt: 'Deterministic result.' };
 
+test('concurrent requests to one actor preserve both turns and one search per call ID', async () => {
+  const conversation = `concurrent_${randomUUID().replaceAll('-', '')}`;
+  const runtime = await startRuntime('.scratch/test-state');
+  try {
+    const turns = await Promise.all([
+      command(runtime.base, conversation, { type: 'start_turn', commandId: 'concurrent_turn_1' }),
+      command(runtime.base, conversation, { type: 'start_turn', commandId: 'concurrent_turn_2' }),
+    ]);
+    assert.deepEqual(turns.map((turn) => turn.generation).sort(), [1, 2]);
+    assert.equal((await state(runtime.base, conversation)).generation, 2);
+
+    const searches = await Promise.all([
+      command(runtime.base, conversation, {
+        type: 'start_search', commandId: 'concurrent_search_1', callId: 'shared_call',
+        generation: 2, query: 'Panama law',
+      }),
+      command(runtime.base, conversation, {
+        type: 'start_search', commandId: 'concurrent_search_2', callId: 'shared_call',
+        generation: 2, query: 'Panama law',
+      }),
+    ]);
+    assert.deepEqual(searches.map((search) => search.outcome).sort(), ['duplicate_call', 'search_pending']);
+    assert.deepEqual((await state(runtime.base, conversation)).searches.map((search) => search.callId), ['shared_call']);
+  } finally {
+    await stopRuntime(runtime);
+  }
+});
+
 test('SQLite backed actors coordinate overlapping turns, duplicates, late results, isolation, and restart', async () => {
   const persistTo = '.scratch/test-state';
   const first = `first_${randomUUID().replaceAll('-', '')}`;
