@@ -12,7 +12,7 @@ flowchart LR
 
 ## Run locally
 
-From `experiments/conversation-actor/`, with Node 20 or newer:
+From `experiments/conversation-actor/`, with Node 22.12.0 or newer:
 
 ```sh
 npm ci
