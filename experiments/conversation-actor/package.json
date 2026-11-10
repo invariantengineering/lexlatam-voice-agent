@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "wrangler dev --local",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/actor.test.mjs",
+    "test": "node --test tests/actor.integration.mjs",
     "demo": "node scripts/demo.mjs"
   },
   "devDependencies": {
